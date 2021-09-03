@@ -69,7 +69,7 @@ module DEBUGGER__
 
     TestInfo = Struct.new(:queue, :remote_debuggee_info, :mode, :backlog, :last_backlog, :internal_info)
 
-    MULTITHREADED_TEST = !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
+    MULTITHREADED_TEST = false # !(%w[1 true].include? ENV['RUBY_DEBUG_TEST_DISABLE_THREADS'])
 
     # This method will execute both local and remote mode by default.
     def debug_code(program, boot_options: '-r debug/start', remote: true, &block)
@@ -139,7 +139,7 @@ module DEBUGGER__
     RUBY_DEBUG_TEST_PORT = '12345'
 
     nr = ENV['RUBY_DEBUG_TEST_NO_REMOTE']
-    NO_REMOTE = nr == 'true' || nr == '1'
+    NO_REMOTE = true # nr == 'true' || nr == '1'
 
     if !NO_REMOTE
       warn "Tests on local and remote. You can disable remote tests with RUBY_DEBUG_TEST_NO_REMOTE=1."
@@ -234,9 +234,20 @@ module DEBUGGER__
           Process.waitpid pid
         end
       end
+    rescue Errno::ENOENT
+      noent_info cmd
     end
 
     private
+
+    def noent_info cmd
+      STDERR.puts [cmd: cmd, RDBG_EXECUTABLE: RDBG_EXECUTABLE, RUBY: RUBY, RbConfig: RbConfig.ruby, caller: caller].inspect
+      exe = cmd.split(/\s/).first
+      STDERR.puts [glob_path: glob_path = File.join(File.dirname(exe), '*')].inspect
+      STDERR.puts Dir.glob(glob_path).inspect
+
+      exit!
+    end
 
     def deque test_info
       assert_finish test_info if test_info.queue.empty?
@@ -284,6 +295,8 @@ module DEBUGGER__
       remote_r, remote_w, remote_debuggee_pid = PTY.spawn(cmd)
       remote_r.read(1) # wait for the remote server to boot up
       [remote_r, remote_w, remote_debuggee_pid]
+    rescue Errno::ENOENT
+      noent_info cmd
     end
 
     def inject_lib_to_load_path
