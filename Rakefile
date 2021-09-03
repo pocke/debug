@@ -1,6 +1,9 @@
 require "bundler/gem_tasks"
 require "rake/testtask"
 
+# for make test-bundled-gems
+Gem.instance_variable_set(:@ruby, ENV['RUBY']) if ENV['RUBY']
+
 Rake::TestTask.new(:test) do |t|
   t.libs << "test"
   t.libs << "lib"
