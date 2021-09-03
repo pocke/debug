@@ -241,7 +241,7 @@ module DEBUGGER__
     private
 
     def noent_info cmd
-      STDERR.puts [cmd: cmd, RDBG_EXECUTABLE: RDBG_EXECUTABLE, RUBY: RUBY, RbConfig: RbConfig.ruby, caller: caller].inspect
+      STDERR.puts [cmd: cmd, RDBG_EXECUTABLE: RDBG_EXECUTABLE, RUBY: RUBY, RbConfig: RbConfig.ruby, ENV: ENV.to_h].inspect
       exe = cmd.split(/\s/).first
       STDERR.puts [glob_path: glob_path = File.join(File.dirname(exe), '*')].inspect
       STDERR.puts Dir.glob(glob_path).inspect
